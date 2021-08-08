@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from fedex_request import req
 import fedex_parser as parser
-import xmltodict
 import json
 from bs4 import BeautifulSoup
 
