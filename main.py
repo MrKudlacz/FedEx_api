@@ -1,8 +1,11 @@
-import flask
+from flask import Flask, render_template, request, redirect
 from fedex_request import req
+import fedex_parser as parser
 import xmltodict
 import json
+from bs4 import BeautifulSoup
 
+app = Flask(__name__)
 url = "https://wsbeta.fedex.com:443/web-services"
 cred_dict = {'parent_key': 'HicUfijJZSUAtqAG', 'parent_password': '2IX4AJyvWW9WltylOvw3RokcN',
             'user_key': 'mIAfOSJ0e32Zc4oV', 'user_password': 'gvTG2nBBVKwZq9dWJnBnJ7rVH',
@@ -14,28 +17,37 @@ tracking_number = '076288115212522'
 requestor = req(url, cred_dict)
 
 resp = requestor.track(tracking_number)
-xpars = xmltodict.parse(resp.text)
-details_dict = xpars['SOAP-ENV:Envelope']['SOAP-ENV:Body']['TrackReply']['CompletedTrackDetails']['TrackDetails']
-events_dict = details_dict['Events']
-carrier = details_dict['CarrierCode']
-status = events_dict['EventDescription']
-checkpoints = {}
-for event in events_dict:
-    selected_event_dict = {}
-    selected_event_dict['description'] = events_dict['event']['EventDescription']
-    checkpoints.append(selected_event_dict)
-print(json.dumps(events_dict, indent=4, sort_keys=True))
+response_dict = parser.parse_response(resp.text)
 
-import xml.etree.ElementTree as ET
-tree = ET.ElementTree(ET.fromstring(resp.text))
-root = tree.getroot()
 
-from bs4 import BeautifulSoup
-bs = BeautifulSoup(resp.text, 'xml')
-pretty_xml = bs.prettify()
-print(pretty_xml)
-carrier = bs.find_all('CarrierCode')[0].text
-events = bs.find_all('CarrierCode')[0].text
-for ev in bs.find_all('Events'):
-    print(ev.find('EventDescription').text)
-    print('/n')
+print(response_dict)
+
+print('end')
+
+@app.route('/fedex', methods=['POST','GET'])
+def fedex_api_call_page():
+    response_json = ''
+    tracking_number = request.form.get('tracking_number')
+    if tracking_number is not None:
+        resp = requestor.track(tracking_number)
+        response_dict = parser.parse_response(resp.text)
+        print(response_dict)
+        response_json = json.dumps(response_dict, indent = 4, separators = (',', ': '))
+        return render_template('index.html', input = response_json)
+    else:
+        return render_template('index.html')#, input = None)
+
+    
+
+@app.route('/fedex/call')
+def fedex_api_call():
+    tracking_number = request.args.get('tracking_number')
+    resp = requestor.track(tracking_number)
+    response_dict = parser.parse_response(resp.text)
+    print(response_dict)
+    render_template('index.html')
+
+
+app.run(debug = True)
+
+
