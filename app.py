@@ -13,6 +13,14 @@ CRED_DICT = {'parent_key': 'HicUfijJZSUAtqAG', 'parent_password': '2IX4AJyvWW9Wl
 requestor = req(URL, CRED_DICT)
 
 def get_message_from_request(tracking_number):
+    """Gets message by parsing request to renderable response.
+
+    Args:
+        tracking_number (str): Fedex tracking number.   
+
+    Returns:
+        str: Parsed response or error messge.
+    """    
     resp = requestor.track(tracking_number)
     if resp.status_code != 200:
         return f'FedEx API returns {resp.status_code}, server may be overloaded, please try again later.'
@@ -24,6 +32,14 @@ def get_message_from_request(tracking_number):
         return pars.response_error  
 
 def get_message_to_render(tracking_number):
+    """Checks for tracking number and gets message from fedex api if available.
+
+    Args:
+        tracking_number (str): Fedex tracking number. 
+
+    Returns:
+        str: Parsed response, notification or error messge.
+    """    
     if tracking_number is None:
         return 'Please enter tracking number.'
     elif tracking_number == '':
@@ -33,6 +49,11 @@ def get_message_to_render(tracking_number):
 
 @app.route('/', methods=['POST','GET'])
 def fedex_api_call_page():
+    """Main response generating function.
+
+    Returns:
+        render_template: Renders basic response page.
+    """    
     tracking_number = request.form.get('tracking_number')
     try:
         message_to_render = get_message_to_render(tracking_number)

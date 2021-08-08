@@ -1,14 +1,25 @@
 from bs4 import BeautifulSoup
 
 class parser():
+    """Class for parsing response and checking for errors.
+    """    
     def __init__(self, response_to_parse):
+        """init
+
+        Args:
+            response_to_parse (str): Fedex API response.
+        """        
         self.response_to_parse = response_to_parse
         self.response_bs = BeautifulSoup(self.response_to_parse, 'xml')
         self.response_error = ''
         self.response_correct = self._check_tracking_received()
 
     def parse_response(self):
-        
+        """Parses text to expexted response format.
+
+        Returns:
+            dict: expexted response dict
+        """        
         #pretty_xml = self.response_bs.prettify()
         output_dict = {}
         carrier = self._get_tag_value(self.response_bs, 'CarrierCode')
@@ -37,6 +48,11 @@ class parser():
         return output_dict
 
     def _check_tracking_received(self):
+        """Checks for basic errors in response.
+
+        Returns:
+            boolean: Is response correct?
+        """        
         for notification in self.response_bs.find_all('Notification'):
             for el in notification.find_all('Severity'):
                 if el.text == 'ERROR':
@@ -50,6 +66,15 @@ class parser():
         return True
 
     def _get_tag_value(self, bs_element, tag):
+        """Helper function for geting tag value.
+
+        Args:
+            bs_element (bs element): BS element to check.
+            tag (tag): Tag to check by.
+
+        Returns:
+            str/none: Returs tag value if exists.
+        """        
         if bs_element.find(tag) is None:
             return None
         else:
