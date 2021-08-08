@@ -22,8 +22,14 @@ def parse_response(xml_str):
 
         checkpoint['location'] = location
         checkpoints_list.append(checkpoint)
-    
+
+        time = get_tag_value(ev, 'Timestamp')
+        checkpoint['time'] = time
+
     output_dict['checkpoints'] = checkpoints_list
+
+
+
     return output_dict
 
 def get_tag_value(bs_element, tag):
