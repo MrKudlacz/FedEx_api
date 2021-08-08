@@ -1,14 +1,16 @@
+"""Module for parsing Fedex API responses.
+"""
 from bs4 import BeautifulSoup
 
 class parser():
     """Class for parsing response and checking for errors.
-    """    
+    """
     def __init__(self, response_to_parse):
         """init
 
         Args:
             response_to_parse (str): Fedex API response.
-        """        
+        """
         self.response_to_parse = response_to_parse
         self.response_bs = BeautifulSoup(self.response_to_parse, 'xml')
         self.response_error = ''
@@ -19,7 +21,7 @@ class parser():
 
         Returns:
             dict: expexted response dict
-        """        
+        """
         #pretty_xml = self.response_bs.prettify()
         output_dict = {}
         carrier = self._get_tag_value(self.response_bs, 'CarrierCode')
@@ -28,20 +30,20 @@ class parser():
         output_dict['status'] = status
 
         checkpoints_list = []
-        for ev in self.response_bs.find_all('Events'):
+        for response_event in self.response_bs.find_all('Events'):
             checkpoint = {}
 
-            checkpoint['description'] = self._get_tag_value(ev, 'EventDescription')
+            checkpoint['description'] = self._get_tag_value(response_event, 'EventDescription')
             location = {}
-            location['city'] = self._get_tag_value(ev, 'City')
-            location['country'] = self._get_tag_value(ev, 'CountryName')
-            location['postal_code'] = self._get_tag_value(ev, 'PostalCode')
-            location['state'] = self._get_tag_value(ev, 'StateOrProvinceCode')
+            location['city'] = self._get_tag_value(response_event, 'City')
+            location['country'] = self._get_tag_value(response_event, 'CountryName')
+            location['postal_code'] = self._get_tag_value(response_event, 'PostalCode')
+            location['state'] = self._get_tag_value(response_event, 'StateOrProvinceCode')
 
             checkpoint['location'] = location
             checkpoints_list.append(checkpoint)
 
-            time = self._get_tag_value(ev, 'Timestamp')
+            time = self._get_tag_value(response_event, 'Timestamp')
             checkpoint['time'] = time
 
         output_dict['checkpoints'] = checkpoints_list
@@ -52,15 +54,15 @@ class parser():
 
         Returns:
             boolean: Is response correct?
-        """        
+        """
         for notification in self.response_bs.find_all('Notification'):
-            for el in notification.find_all('Severity'):
-                if el.text == 'ERROR':
+            for notification_element in notification.find_all('Severity'):
+                if notification_element.text == 'ERROR':
                     self.response_error = self._get_tag_value(notification, 'Message')
                     return False
         for notification in self.response_bs.find_all('v18:Notifications'):
-            for el in notification.find_all('Severity'):
-                if el.text == 'ERROR':
+            for notification_element in notification.find_all('Severity'):
+                if notification_element.text == 'ERROR':
                     self.response_error = self._get_tag_value(notification, 'Message')
                     return False
         return True
@@ -74,11 +76,8 @@ class parser():
 
         Returns:
             str/none: Returs tag value if exists.
-        """        
+        """
         if bs_element.find(tag) is None:
             return None
         else:
             return bs_element.find(tag).text
-
-
-

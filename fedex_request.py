@@ -1,6 +1,10 @@
+"""Module for sending request to Fedex API.
+"""
 import requests
 
 class req():
+    """Request sending class.
+    """
     def __init__(self, req_url, cred_dict):
         self.url = req_url
         self.parent_key = cred_dict['parent_key']
@@ -11,12 +15,23 @@ class req():
         self.client_meter = cred_dict['client_meter']
 
     def track(self, tack_id):
+        """Sends track request.
+
+        Args:
+            tack_id (str): Fedex tracking number.
+
+        Returns:
+            request response: Fedex request response.
+        """
         with open("track_body.xml", "r") as payload_file:
             payload_raw = payload_file.read()
 
-        payload = payload_raw.format(parent_key = self.parent_key, parent_password = self.parent_password,
-                                    user_key = self.user_key, user_password = self.user_password,
-                                    client_account = self.client_account, client_meter = self.client_meter,
+        payload = payload_raw.format(parent_key = self.parent_key,
+                                    parent_password = self.parent_password,
+                                    user_key = self.user_key,
+                                    user_password = self.user_password,
+                                    client_account = self.client_account,
+                                    client_meter = self.client_meter,
                                     tracking_number = tack_id)
         headers = {
         'Content-Type': 'application/xml',
